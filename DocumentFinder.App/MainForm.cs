@@ -70,7 +70,7 @@ internal sealed class MainForm : Form
     private void Build()
     {
         var shell=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=3,Padding=Padding.Empty};
-        shell.RowStyles.Add(new RowStyle(SizeType.Absolute,78));shell.RowStyles.Add(new RowStyle(SizeType.Percent,100));shell.RowStyles.Add(new RowStyle(SizeType.Absolute,88));Controls.Add(shell);
+        shell.RowStyles.Add(new RowStyle(SizeType.Absolute,78));shell.RowStyles.Add(new RowStyle(SizeType.Percent,100));shell.RowStyles.Add(new RowStyle(SizeType.Absolute,160));Controls.Add(shell);
         var header=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=4,Padding=new Padding(22,12,20,10),BackColor=Color.FromArgb(246,248,251)};
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,48));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,245));header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,142));
         header.Controls.Add(new PictureBox{Image=Icon!.ToBitmap(),SizeMode=PictureBoxSizeMode.Zoom,Dock=DockStyle.Fill,Margin=new Padding(0,4,10,4),AccessibleName="모두찾아줘 아이콘"},0,0);
@@ -96,9 +96,9 @@ internal sealed class MainForm : Form
         var clean=new LinkLabel{Text="없는 파일 색인 정리",Dock=DockStyle.Fill,LinkColor=accent,TextAlign=ContentAlignment.MiddleLeft};clean.LinkClicked+=async(_,_)=>await CleanMissing();side.Controls.Add(clean,0,9);work.Panel1.Controls.Add(side);
 
         var body=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=4,Padding=new Padding(20,18,20,10)};
-        body.RowStyles.Add(new RowStyle(SizeType.Absolute,46));body.RowStyles.Add(new RowStyle(SizeType.Absolute,43));body.RowStyles.Add(new RowStyle(SizeType.Absolute,34));body.RowStyles.Add(new RowStyle(SizeType.Percent,100));
-        var searchLine=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,Padding=Padding.Empty};searchLine.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));searchLine.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,100));
-        query.Font=new Font(Font.FontFamily,13);query.Margin=new Padding(0,0,10,0);var searchButton=Button("검색");searchButton.Dock=DockStyle.Fill;searchButton.Click+=async(_,_)=>await Search();
+        body.RowStyles.Add(new RowStyle(SizeType.Absolute,54));body.RowStyles.Add(new RowStyle(SizeType.Absolute,43));body.RowStyles.Add(new RowStyle(SizeType.Absolute,34));body.RowStyles.Add(new RowStyle(SizeType.Percent,100));
+        var searchLine=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=1,GrowStyle=TableLayoutPanelGrowStyle.FixedSize,Padding=Padding.Empty,Margin=Padding.Empty};searchLine.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));searchLine.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,120));searchLine.RowStyles.Add(new RowStyle(SizeType.Percent,100));
+        query.Font=new Font(Font.FontFamily,13);query.Margin=new Padding(0,3,12,6);var searchButton=new SearchActionButton{Dock=DockStyle.Fill,Margin=new Padding(0,0,0,6)};searchButton.Click+=async(_,_)=>await Search();
         searchLine.Controls.Add(query,0,0);searchLine.Controls.Add(searchButton,1,0);body.Controls.Add(searchLine,0,0);
         kind.Items.AddRange(["전체","엑셀","PDF","한글","Word","PowerPoint","텍스트"]);kind.SelectedIndex=0;
         order.Items.AddRange(["관련도순","최근 수정순"]);order.SelectedIndex=0;
@@ -108,11 +108,13 @@ internal sealed class MainForm : Form
         resultSplit.Panel1MinSize=250;resultSplit.Panel2MinSize=250;
         ConfigureGrid();resultSplit.Panel1.Controls.Add(grid);BuildDetails();body.Controls.Add(resultSplit,0,3);work.Panel2.Controls.Add(body);
 
-        var footer=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=4,Padding=new Padding(20,7,20,7),BackColor=Color.FromArgb(246,248,251)};
-        footer.RowStyles.Add(new RowStyle(SizeType.Absolute,24));footer.RowStyles.Add(new RowStyle(SizeType.Absolute,8));footer.RowStyles.Add(new RowStyle(SizeType.Absolute,22));footer.RowStyles.Add(new RowStyle(SizeType.Percent,100));
-        progressText.Font=new Font(Font.FontFamily,9);current.Font=new Font(Font.FontFamily,8.5F);current.ForeColor=muted;current.AutoEllipsis=true;
-        statistics.Font=new Font(Font.FontFamily,8.5F);statistics.ForeColor=muted;
-        footer.Controls.Add(progressText,0,0);footer.Controls.Add(bar,0,1);footer.Controls.Add(current,0,2);footer.Controls.Add(statistics,0,3);shell.Controls.Add(footer,0,2);
+        var footer=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=4,Margin=Padding.Empty,Padding=new Padding(20,10,20,14),BackColor=Color.FromArgb(246,248,251)};
+        footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));
+        footer.RowStyles.Add(new RowStyle(SizeType.Absolute,64));footer.RowStyles.Add(new RowStyle(SizeType.Absolute,28));footer.RowStyles.Add(new RowStyle(SizeType.Absolute,10));footer.RowStyles.Add(new RowStyle(SizeType.Percent,100));
+        progressText.Font=new Font(Font.FontFamily,10);current.Font=new Font(Font.FontFamily,9);current.ForeColor=muted;current.AutoEllipsis=true;
+        statistics.Font=new Font(Font.FontFamily,9.5F);statistics.ForeColor=ink;statistics.TextAlign=ContentAlignment.TopLeft;statistics.AccessibleName="색인 통계와 마지막 색인 시간";
+        foreach(var control in new Control[]{statistics,progressText,bar,current})control.Margin=Padding.Empty;
+        footer.Controls.Add(statistics,0,0);footer.Controls.Add(progressText,0,1);footer.Controls.Add(bar,0,2);footer.Controls.Add(current,0,3);shell.Controls.Add(footer,0,2);
         tips.SetToolTip(query,"띄어쓰기로 여러 단어를 입력하면 모두 포함된 문서를 찾습니다. 따옴표로 묶으면 문구 그대로 찾습니다. Ctrl+F로 검색창 이동.");
         tips.SetToolTip(online,"OneDrive·Google Drive 등의 온라인 전용 파일도 내용 색인합니다. 인터넷 상태에 따라 오래 걸릴 수 있습니다.");
     }
@@ -256,7 +258,7 @@ internal sealed class MainForm : Form
     private void UpdateStats()
     {
         var s=store.Stats();statistics.Text=$"내 PC 색인 {s.Total:N0}개 · 내용 읽음 {s.Complete:N0}개 · 파일명만/대기 {s.Pending:N0}개 · 확인 필요 {s.Issues:N0}개"
-            +(store.GetSetting("lastScan") is { } date?" · 마지막 색인 "+date:"");
+            +(store.GetSetting("lastScan") is { } date?"\n마지막 색인: "+date:"\n아직 내용 색인을 실행하지 않았습니다.");
     }
     private async Task CleanMissing()
     {
