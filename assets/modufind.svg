@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">모두찾아줘</title>
+<desc id="desc">Three stacked documents and a cyan magnifying glass on a blue square.</desc>
+<rect x="24" y="24" width="464" height="464" rx="112" fill="#1557C8"/>
+<rect x="130" y="88" width="200" height="264" rx="28" fill="#8FC9FA"/>
+<rect x="100" y="110" width="200" height="264" rx="28" fill="#C4E8FF"/>
+<rect x="70" y="132" width="200" height="264" rx="28" fill="#FFFFFF"/>
+<path d="M112 192L218 192" fill="none" stroke="#1557C8" stroke-width="18" stroke-linecap="round"/>
+<path d="M112 238L184 238" fill="none" stroke="#1557C8" stroke-width="18" stroke-linecap="round"/>
+<path d="M350 348L414 412" fill="none" stroke="#07336F" stroke-width="58" stroke-linecap="round"/>
+<path d="M350 348L414 412" fill="none" stroke="#6DE0EF" stroke-width="30" stroke-linecap="round"/>
+<circle cx="312" cy="300" r="98" fill="#07336F"/>
+<circle cx="312" cy="300" r="74" fill="#6DE0EF"/>
+</svg>

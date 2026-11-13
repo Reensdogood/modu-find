@@ -1,0 +1,17 @@
+**/bin/
+**/obj/
+*.db
+*.db-shm
+*.db-wal
+__pycache__/
+artifacts/
+.vs/
+.idea/
+*.user
+*.suo
+*.log
+*.download
+index-result.json
+seed-*.json
+seed-*.txt
+updates/

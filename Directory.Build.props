@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <Version>1.1.0</Version>
+    <Authors>Reensdogood</Authors>
+    <Company>펀네트</Company>
+    <Product>모두찾아줘</Product>
+    <Copyright>Copyright (c) 2026 김린</Copyright>
+    <RepositoryUrl>https://github.com/Reensdogood/modu-find</RepositoryUrl>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+</Project>
