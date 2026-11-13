@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "1.1.0"
+  #define AppVersion "1.1.1"
 #endif
 #ifndef PublishDir
   #define PublishDir "..\artifacts\app"
@@ -125,7 +125,8 @@ begin
   try
     Shell := CreateOleObject('WScript.Shell');
     Shortcut := Shell.CreateShortcut(Link);
-    Target := Lowercase(Shortcut.TargetPath);
+    Target := Shortcut.TargetPath;
+    Target := Lowercase(Target);
     OldRoot := Lowercase(ExpandConstant('{localappdata}\Programs\FunnetDocumentFinder\'));
     if (Pos(OldRoot, Target) = 1) and (Lowercase(ExtractFileName(Target)) = 'documentfinder.exe') then
       DeleteFile(Link);

@@ -1,7 +1,8 @@
 """Exercise install/repair/remove in a temporary app folder, preserving existing index data."""
-import hashlib, json, os, pathlib, subprocess, sys, tempfile, winreg
+import hashlib, json, os, pathlib, re, subprocess, sys, tempfile, winreg
 
 setup=pathlib.Path(sys.argv[1]).resolve()
+version=re.fullmatch(r'ModuFind-Setup-(\d+\.\d+\.\d+)-win-x64\.exe',setup.name).group(1)
 work=pathlib.Path(tempfile.mkdtemp(prefix='ModuFind-installer-'));target=work/'installed'
 key=r'Software\Microsoft\Windows\CurrentVersion\Uninstall\{49C94EA7-7F80-4BAC-BB30-2E23BA2D5F4A}_is1'
 def registration():
@@ -18,7 +19,7 @@ for phase in ['install','repair']:
     if phase=='repair':args.append('/UPDATE')
     result=subprocess.run(args,timeout=120,creationflags=subprocess.CREATE_NO_WINDOW)
     assert result.returncode==0,(phase,result.returncode,work)
-    record=registration();assert record and record['DisplayName']=='모두찾아줘' and record['DisplayVersion']=='1.1.0',record
+    record=registration();assert record and record['DisplayName']=='모두찾아줘' and record['DisplayVersion']==version,record
     assert (target/'ModuFind.exe').exists() and (target/'unins000.exe').exists(),list(target.iterdir())
     assert digest(data)==before,'Existing index changed during setup.'
     if phase=='install':(target/'user-note.txt').write_text('This user file must survive removal.',encoding='utf-8')

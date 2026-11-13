@@ -1,12 +1,13 @@
 param(
-    [string]$Version = '1.1.0',
+    [string]$Version,
     [string]$OutputDirectory,
     [string]$InnoCompiler
 )
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
-if($Version -notmatch '^\d+\.\d+\.\d+$'){throw 'Version must be a stable three-part version.'}
 $root=$PSScriptRoot
+if(-not $Version){[xml]$versionProps=Get-Content -LiteralPath (Join-Path $root 'Directory.Build.props');$Version=[string]$versionProps.Project.PropertyGroup.Version}
+if($Version -notmatch '^\d+\.\d+\.\d+$'){throw 'Version must be a stable three-part version.'}
 if(-not $OutputDirectory){$OutputDirectory=Join-Path $root 'artifacts'}
 $OutputDirectory=[IO.Path]::GetFullPath($OutputDirectory)
 $publish=Join-Path $OutputDirectory 'app'

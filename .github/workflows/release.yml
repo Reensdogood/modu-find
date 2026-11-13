@@ -34,6 +34,13 @@ jobs:
             if($tag -cne "v$version"){throw "Tag $tag does not match source version $version"}
           }
           ./build-release.ps1 -Version $version
+      - name: Verify installer lifecycle
+        shell: pwsh
+        run: |
+          [xml]$props=Get-Content Directory.Build.props
+          $version=[string]$props.Project.PropertyGroup.Version
+          python verify_installer.py "artifacts/release/ModuFind-Setup-$version-win-x64.exe"
+          if($LASTEXITCODE -ne 0){throw 'Installer lifecycle checks failed.'}
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:

@@ -5,7 +5,7 @@ root=pathlib.Path(__file__).resolve().parent
 parser=argparse.ArgumentParser()
 parser.add_argument('--publish-dir',type=pathlib.Path,default=root/'artifacts/app')
 parser.add_argument('--release-dir',type=pathlib.Path,default=root/'artifacts/release')
-parser.add_argument('--version',default='1.1.0')
+parser.add_argument('--version',default=ET.parse(root/'Directory.Build.props').findtext('.//Version'))
 parser.add_argument('--no-zip',action='store_true')
 args=parser.parse_args()
 out=args.publish_dir.resolve()
