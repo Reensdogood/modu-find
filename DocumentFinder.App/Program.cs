@@ -39,16 +39,48 @@ internal static class Program
         {
             CheckUpdate(args);return;
         }
+        if(args.Contains("--convert")||args.Contains("--conversion-formats"))
+        {
+            RunConversion(args);return;
+        }
         ApplicationConfiguration.Initialize();
         Application.ThreadException+=(_,e)=>MessageBox.Show("작업 중 오류가 발생했습니다. 다시 시도해 주세요.\n\n"+e.Exception.Message,"모두찾아줘",MessageBoxButtons.OK,MessageBoxIcon.Warning);
         try
         {
-            using var mutex=new Mutex(true,"Local\\FunnetDocumentFinder-"+Environment.UserName,out var first);
+            var mutexName="Local\\FunnetDocumentFinder-"+Environment.UserName;
+            if(Environment.GetEnvironmentVariable("DOCUMENT_FINDER_DATA") is {Length:>0})
+                mutexName+="-"+System.Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(Path.GetFullPath(DataDirectory))))[..12];
+            using var mutex=new Mutex(true,mutexName,out var first);
             if(!first){MessageBox.Show("모두찾아줘가 이미 실행 중입니다. 작업 표시줄에서 창을 열어 주세요.","모두찾아줘");return;}
             using var main=new MainForm(new SearchStore(Path.Combine(DataDirectory,"documents.db")));
             Application.Run(main);
         }
         catch(Exception ex){MessageBox.Show("모두찾아줘를 시작하지 못했습니다.\n\n"+ex.Message,"모두찾아줘",MessageBoxButtons.OK,MessageBoxIcon.Error);}
+    }
+
+    private static void RunConversion(string[] args)
+    {
+        Directory.CreateDirectory(DataDirectory);
+        string? Arg(string key){var n=Array.IndexOf(args,key);return n>=0&&n+1<args.Length?args[n+1]:null;}
+        var report=Arg("--report")??Path.Combine(DataDirectory,"conversion-result.json");
+        try
+        {
+            var client=ConversionForm.CreateClient();object result;
+            using var cancellation=new CancellationTokenSource();if(int.TryParse(Arg("--cancel-after-ms"),out var ms))cancellation.CancelAfter(ms);
+            if(args.Contains("--conversion-formats"))
+            {
+                var all=client.FormatsAsync(cancellation.Token).GetAwaiter().GetResult();
+                var source=Arg("--input");result=source is null?all:client.TargetsAsync([source],cancellation.Token).GetAwaiter().GetResult();
+            }
+            else
+            {
+                var inputs=new List<string>();for(var i=0;i<args.Length-1;i++)if(args[i]=="--input")inputs.Add(args[++i]);
+                result=client.ConvertAsync(inputs,Arg("--to")??throw new ArgumentException("--to가 필요합니다."),Arg("--output")??throw new ArgumentException("--output이 필요합니다."),Arg("--pages"),token:cancellation.Token).GetAwaiter().GetResult();
+            }
+            File.WriteAllText(report,JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));
+        }
+        catch(OperationCanceledException){File.WriteAllText(report,JsonSerializer.Serialize(new{Cancelled=true}));}
+        catch(Exception ex){File.WriteAllText(report,JsonSerializer.Serialize(new{Error=ex.ToString()}));Environment.ExitCode=1;}
     }
 
     private static void CheckUpdate(string[] args)

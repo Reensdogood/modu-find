@@ -48,6 +48,12 @@ notes += ['SQLite native engine is in the public domain: https://www.sqlite.org/
           'SQLitePCLRaw: Copyright (c) 2014-2024 SourceGear, LLC. See SQLitePCLRaw-LICENSE.txt.',
           'ExcelDataReader: See the complete upstream copyright and license in ExcelDataReader-LICENSE.txt.',
           '.NET and Windows Desktop runtime: Microsoft Corporation and contributors. Included runtime license/third-party notices are in licenses/.']
+if (out/'conversion/filee-2.4.1/filee-cli.exe').is_file():
+    notes += ['', 'Filee 2.4.1 CLI and conversion runtime (unmodified official release).',
+              'Copyright (c) 2026 Myeonggu Kim (KnifeLemon) and Filee contributors. MIT License.',
+              'Source: https://github.com/KnifeLemon/Filee/tree/90dd8c322e62aa07e315dd17949ddd5283c04c08',
+              'Filee and every bundled/optional component retain their own licenses.',
+              'See conversion/filee-2.4.1/FILEE-LICENSE.txt and FILEE-THIRD-PARTY-NOTICES.md, and licenses alongside engines.']
 for framework in assets['project']['frameworks'].values():
     for dep in framework.get('downloadDependencies',[]):
         if dep['name'].lower() not in {'microsoft.netcore.app.runtime.win-x64','microsoft.windowsdesktop.app.runtime.win-x64'}:continue

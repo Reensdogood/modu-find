@@ -22,6 +22,10 @@ if(-not $InnoCompiler){throw 'Inno Setup compiler not found. Install Inno Setup 
 if($LASTEXITCODE -ne 0){throw 'Core/update tests failed.'}
 & dotnet publish (Join-Path $root 'DocumentFinder.App') -c Release -r win-x64 -o $publish --nologo "-p:Version=$Version" '-p:DebugType=None' '-p:DebugSymbols=false'
 if($LASTEXITCODE -ne 0){throw 'Application publish failed.'}
+& python (Join-Path $root 'tools\prepare_filee.py') --publish-dir $publish
+if($LASTEXITCODE -ne 0){throw 'Filee runtime preparation failed.'}
+& dotnet run --project (Join-Path $root 'DocumentFinder.Conversion.Tests') -c Release -- (Join-Path $publish 'conversion\filee-2.4.1')
+if($LASTEXITCODE -ne 0){throw 'Document conversion integration checks failed.'}
 & python (Join-Path $root 'verify_runtime.py') (Join-Path $publish 'ModuFind.exe')
 if($LASTEXITCODE -ne 0){throw 'Worker integration checks failed.'}
 & python (Join-Path $root 'verify_index.py') (Join-Path $publish 'ModuFind.exe')

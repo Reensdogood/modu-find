@@ -25,6 +25,7 @@ internal sealed class MainForm : Form
     private readonly ProgressBar bar=new(){Dock=DockStyle.Fill,Height=8,AccessibleName="색인 진행률"};
     private readonly CheckBox wholeText=new(){Text="본문 전체 보기",AutoSize=true};
     private readonly Button update=Button("업데이트 확인");
+    private readonly Button documentConvert=Button("문서 변환");
     private AppRelease? availableRelease;
     private readonly System.Windows.Forms.Timer debounce=new(){Interval=280};
     private readonly System.Windows.Forms.Timer duringScan=new(){Interval=2500};
@@ -71,12 +72,13 @@ internal sealed class MainForm : Form
     {
         var shell=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=3,Padding=Padding.Empty};
         shell.RowStyles.Add(new RowStyle(SizeType.Absolute,78));shell.RowStyles.Add(new RowStyle(SizeType.Percent,100));shell.RowStyles.Add(new RowStyle(SizeType.Absolute,160));Controls.Add(shell);
-        var header=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=4,Padding=new Padding(22,12,20,10),BackColor=Color.FromArgb(246,248,251)};
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,48));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,245));header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,142));
+        var header=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=5,Padding=new Padding(22,12,20,10),BackColor=Color.FromArgb(246,248,251)};
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,48));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,245));header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,125));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,142));
         header.Controls.Add(new PictureBox{Image=Icon!.ToBitmap(),SizeMode=PictureBoxSizeMode.Zoom,Dock=DockStyle.Fill,Margin=new Padding(0,4,10,4),AccessibleName="모두찾아줘 아이콘"},0,0);
         var name=Label("모두찾아줘");name.Font=new Font(Font.FontFamily,18,FontStyle.Bold);header.Controls.Add(name,1,0);
         var desc=Label("파일명 · 엑셀 시트명 · 문서 본문 검색");desc.ForeColor=muted;header.Controls.Add(desc,2,0);
-        update.Dock=DockStyle.Fill;update.Margin=new Padding(0,8,0,8);update.Click+=async(_,_)=>await OpenUpdates();header.Controls.Add(update,3,0);shell.Controls.Add(header,0,0);
+        documentConvert.Dock=DockStyle.Fill;documentConvert.Margin=new Padding(0,8,8,8);documentConvert.Click+=(_,_)=>OpenConversion();header.Controls.Add(documentConvert,3,0);
+        update.Dock=DockStyle.Fill;update.Margin=new Padding(0,8,0,8);update.Click+=async(_,_)=>await OpenUpdates();header.Controls.Add(update,4,0);shell.Controls.Add(header,0,0);
 
         var work=new SplitContainer{Size=new Size(1300,600),Dock=DockStyle.Fill,FixedPanel=FixedPanel.Panel1,SplitterWidth=1,SplitterDistance=248};
         work.Panel1MinSize=220;work.Panel2MinSize=600;work.Panel1.BackColor=Color.FromArgb(246,248,251);shell.Controls.Add(work,0,1);
@@ -131,7 +133,7 @@ internal sealed class MainForm : Form
         foreach(DataGridViewColumn col in grid.Columns)col.SortMode=DataGridViewColumnSortMode.NotSortable;
         grid.SelectionChanged+=(_,_)=>SelectCurrent();grid.CellDoubleClick+=(_,e)=>{if(e.RowIndex>=0)OpenSelected(false);};
         grid.KeyDown+=(_,e)=>{if(e.KeyCode==Keys.Enter){e.SuppressKeyPress=true;OpenSelected(false);}};
-        var context=new ContextMenuStrip();context.Items.Add("파일 열기",null,(_,_)=>OpenSelected(false));context.Items.Add("폴더 열기",null,(_,_)=>OpenSelected(true));context.Items.Add("경로 복사",null,(_,_)=>CopyPath());grid.ContextMenuStrip=context;
+        var context=new ContextMenuStrip();context.Items.Add("파일 열기",null,(_,_)=>OpenSelected(false));context.Items.Add("폴더 열기",null,(_,_)=>OpenSelected(true));context.Items.Add("문서 변환",null,(_,_)=>OpenConversion());context.Items.Add("경로 복사",null,(_,_)=>CopyPath());grid.ContextMenuStrip=context;
     }
     private void BuildDetails()
     {
@@ -277,6 +279,11 @@ internal sealed class MainForm : Form
             availableRelease=release;if(release is not null){update.Text="새 버전 "+release.Version;tips.SetToolTip(update,"새 버전을 다운로드하고 설치할 수 있습니다.");}
         }
         catch{/* Offline use remains available; manual checks show actionable errors. */}
+    }
+    private void OpenConversion()
+    {
+        using var dialog=new ConversionForm(selected is not null&&File.Exists(selected.Path)?[selected.Path]:[]);
+        dialog.ShowDialog(this);
     }
     private async Task OpenUpdates()
     {

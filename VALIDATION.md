@@ -1,4 +1,24 @@
-# 모두찾아줘 1.1.0 검증
+# 모두찾아줘 검증
+
+## 1.2.0 · 문서 변환
+
+검증일: 2026-11-16. Windows x64, Filee 2.4.1의 고정된 공식 CLI 배포본 사용.
+
+- 기존 검색·추출·업데이트 검사 45개, 작업 프로세스 4개, 통합 색인 7개 통과.
+- 실제 변환 통합 검사 40개 통과: 한글 TXT→DOCX→HWPX→HWP→TXT, HWPX→PDF, PDF→DOCX, CSV↔XLSX, PDF→PPTX→PDF, HWPX→PNG 결과를 파일 구조·내용으로 확인.
+- 같은 이름의 입력 파일 분리, 원본 SHA-256·수정일 보존, 손상 PDF의 실패 처리, 취소 시 임시 결과 정리와 완료 결과 보존, Filee 데이터 경로 분리 확인.
+- 별도 임시 경로에서 Pandoc을 실제 설치하고 DOCX→RTF를 변환하는 확장 검사 43개 통과. LibreOffice·calibre 다운로드 설치는 이번 로컬 검증 범위에 포함하지 않음.
+- 별도 검색 데이터 경로로 실행한 GUI에서 파일 추가, 공통 출력 형식 조회, 저장 폴더 선택, TXT→PDF 실행과 ‘완료 1개·실패 0개’ 표시 확인. 작은 창에서 하단 상태·버튼 표시 확인.
+- 빌드 시 Filee ZIP의 고정 SHA-256을 검사하며 원본 라이선스·제3자 고지·출처 정보를 배포물에 포함.
+- 태그 릴리스 CI는 새 Windows 환경에서 위 검사와 설치·재설치·제거 검사 7개를 실행한 뒤 설치 파일을 공개함.
+
+```powershell
+dotnet run --project DocumentFinder.Conversion.Tests -c Release -- artifacts/app/conversion/filee-2.4.1
+# 선택 엔진 다운로드까지 확인할 때:
+dotnet run --project DocumentFinder.Conversion.Tests -c Release -- artifacts/app/conversion/filee-2.4.1 --install-pandoc
+```
+
+## 1.1.0 · 검색과 설치
 
 검증일: 2026-11-13. Windows x64, .NET 8 자체 포함 배포.
 
