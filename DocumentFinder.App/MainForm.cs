@@ -71,14 +71,15 @@ internal sealed class MainForm : Form
     private void Build()
     {
         var shell=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=3,Padding=Padding.Empty};
-        shell.RowStyles.Add(new RowStyle(SizeType.Absolute,78));shell.RowStyles.Add(new RowStyle(SizeType.Percent,100));shell.RowStyles.Add(new RowStyle(SizeType.Absolute,160));Controls.Add(shell);
-        var header=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=5,Padding=new Padding(22,12,20,10),BackColor=Color.FromArgb(246,248,251)};
+        shell.RowStyles.Add(new RowStyle(SizeType.Absolute,88));shell.RowStyles.Add(new RowStyle(SizeType.Percent,100));shell.RowStyles.Add(new RowStyle(SizeType.Absolute,160));Controls.Add(shell);
+        var header=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=5,RowCount=1,Margin=Padding.Empty,Padding=new Padding(22,12,20,12),BackColor=Color.FromArgb(246,248,251)};
+        header.RowStyles.Add(new RowStyle(SizeType.Percent,100));
         header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,48));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,245));header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,125));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,142));
         header.Controls.Add(new PictureBox{Image=Icon!.ToBitmap(),SizeMode=PictureBoxSizeMode.Zoom,Dock=DockStyle.Fill,Margin=new Padding(0,4,10,4),AccessibleName="모두찾아줘 아이콘"},0,0);
         var name=Label("모두찾아줘");name.Font=new Font(Font.FontFamily,18,FontStyle.Bold);header.Controls.Add(name,1,0);
         var desc=Label("파일명 · 엑셀 시트명 · 문서 본문 검색");desc.ForeColor=muted;header.Controls.Add(desc,2,0);
-        documentConvert.Dock=DockStyle.Fill;documentConvert.Margin=new Padding(0,8,8,8);documentConvert.Click+=(_,_)=>OpenConversion();header.Controls.Add(documentConvert,3,0);
-        update.Dock=DockStyle.Fill;update.Margin=new Padding(0,8,0,8);update.Click+=async(_,_)=>await OpenUpdates();header.Controls.Add(update,4,0);shell.Controls.Add(header,0,0);
+        documentConvert.Dock=DockStyle.Fill;documentConvert.Margin=new Padding(0,4,8,4);documentConvert.Click+=(_,_)=>OpenConversion();header.Controls.Add(documentConvert,3,0);
+        update.Dock=DockStyle.Fill;update.Margin=new Padding(0,4,0,4);update.Click+=async(_,_)=>await OpenUpdates();header.Controls.Add(update,4,0);shell.Controls.Add(header,0,0);
 
         var work=new SplitContainer{Size=new Size(1300,600),Dock=DockStyle.Fill,FixedPanel=FixedPanel.Panel1,SplitterWidth=1,SplitterDistance=248};
         work.Panel1MinSize=220;work.Panel2MinSize=600;work.Panel1.BackColor=Color.FromArgb(246,248,251);shell.Controls.Add(work,0,1);
@@ -137,14 +138,19 @@ internal sealed class MainForm : Form
     }
     private void BuildDetails()
     {
-        var p=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=8,Padding=new Padding(14,0,0,0),BackColor=Color.White};
-        foreach(var h in new float[]{62,65,26,50,40,32})p.RowStyles.Add(new RowStyle(SizeType.Absolute,h));p.RowStyles.Add(new RowStyle(SizeType.Percent,100));p.RowStyles.Add(new RowStyle(SizeType.Absolute,28));
+        var detailLayout=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=2,Margin=Padding.Empty};
+        detailLayout.RowStyles.Add(new RowStyle(SizeType.Percent,100));detailLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        var p=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=7,Padding=new Padding(14,0,0,0),Margin=Padding.Empty,BackColor=Color.White,AutoScroll=true,AutoScrollMinSize=new Size(0,365)};
+        p.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));
+        foreach(var h in new float[]{62,65,26,50,40,32})p.RowStyles.Add(new RowStyle(SizeType.Absolute,h));p.RowStyles.Add(new RowStyle(SizeType.Percent,100));
+        wholeText.Dock=DockStyle.Fill;wholeText.MinimumSize=new Size(0,32);wholeText.Margin=new Padding(14,6,0,6);
         detailTitle.Font=new Font(Font.FontFamily,11,FontStyle.Bold);detailTitle.AutoEllipsis=true;detailTitle.TextAlign=ContentAlignment.TopLeft;
         detailPath.Font=new Font(Font.FontFamily,9);detailInfo.Font=new Font(Font.FontFamily,9);detailInfo.ForeColor=muted;detailStatus.Font=new Font(Font.FontFamily,9);detailStatus.ForeColor=muted;
         p.Controls.Add(detailTitle,0,0);p.Controls.Add(detailPath,0,1);p.Controls.Add(detailInfo,0,2);p.Controls.Add(detailStatus,0,3);
         var actions=Flow();open.MinimumSize=new Size(78,34);folder.MinimumSize=new Size(78,34);copy.MinimumSize=new Size(78,34);actions.Controls.AddRange([open,folder,copy]);p.Controls.Add(actions,0,4);
         var hint=Label("선택한 문서의 내용과 시트");hint.Font=new Font(Font.FontFamily,9,FontStyle.Bold);p.Controls.Add(hint,0,5);
-        var tabs=new TabControl{Dock=DockStyle.Fill,AccessibleName="문서 미리보기 종류"};var textTab=new TabPage("일치 내용"){Padding=new Padding(8)};textTab.Controls.Add(preview);var sheetTab=new TabPage("엑셀 시트"){Padding=new Padding(8)};sheetTab.Controls.Add(sheets);tabs.TabPages.AddRange([textTab,sheetTab]);p.Controls.Add(tabs,0,6);p.Controls.Add(wholeText,0,7);resultSplit.Panel2.Controls.Add(p);
+        var tabs=new TabControl{Dock=DockStyle.Fill,AccessibleName="문서 미리보기 종류"};var textTab=new TabPage("일치 내용"){Padding=new Padding(8)};textTab.Controls.Add(preview);var sheetTab=new TabPage("엑셀 시트"){Padding=new Padding(8)};sheetTab.Controls.Add(sheets);tabs.TabPages.AddRange([textTab,sheetTab]);p.Controls.Add(tabs,0,6);
+        detailLayout.Controls.Add(p,0,0);detailLayout.Controls.Add(wholeText,0,1);resultSplit.Panel2.Controls.Add(detailLayout);
         wholeText.CheckedChanged+=(_,_)=>ShowPreview();open.Enabled=folder.Enabled=copy.Enabled=false;
     }
     private void WireEvents()

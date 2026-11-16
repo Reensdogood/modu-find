@@ -55,9 +55,10 @@ internal sealed class ConversionForm:Form
     }
     private void Build()
     {
-        var layout=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(20),ColumnCount=1,RowCount=10};
+        var layout=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(20),ColumnCount=1,RowCount=11};
         foreach(var height in new[]{38,46,42})layout.RowStyles.Add(new(SizeType.Absolute,height));
-        layout.RowStyles.Add(new(SizeType.Percent,100));foreach(var height in new[]{42,44,38,70,30,43})layout.RowStyles.Add(new(SizeType.Absolute,height));
+        layout.RowStyles.Add(new(SizeType.Percent,100));foreach(var height in new[]{42,44,38,70,30})layout.RowStyles.Add(new(SizeType.Absolute,height));
+        layout.RowStyles.Add(new(SizeType.AutoSize));layout.RowStyles.Add(new(SizeType.AutoSize));
         layout.Controls.Add(new Label{Text="문서 변환",Font=new Font(Font,FontStyle.Bold),Dock=DockStyle.Fill},0,0);
         layout.Controls.Add(new Label{Text="Filee 2.4.1 엔진으로 이 PC에서 변환합니다. 원본은 유지하고 결과는 새 폴더에 저장합니다.",Dock=DockStyle.Fill},0,1);
         var tools=new FlowLayoutPanel{Dock=DockStyle.Fill,WrapContents=false};tools.Controls.AddRange([add,remove,clear,engines]);layout.Controls.Add(tools,0,2);
@@ -73,8 +74,9 @@ internal sealed class ConversionForm:Form
         destination.Controls.Add(new Label{Text="저장 위치",Dock=DockStyle.Fill,TextAlign=ContentAlignment.MiddleLeft},0,0);destination.Controls.Add(output,1,0);browse.Dock=DockStyle.Fill;destination.Controls.Add(browse,2,0);layout.Controls.Add(destination,0,5);
         layout.Controls.Add(new Label{Text="복잡한 서식·차트는 달라질 수 있으므로 결과를 확인하세요. ‘추가 엔진 필요’ 형식은 추가 엔진에서 설치할 수 있습니다.",Dock=DockStyle.Fill},0,6);
         layout.Controls.Add(details,0,7);layout.Controls.Add(progress,0,8);
-        var bottom=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=1,Margin=Padding.Empty};bottom.RowStyles.Add(new(SizeType.Percent,100));bottom.ColumnStyles.Add(new(SizeType.Percent,100));bottom.ColumnStyles.Add(new(SizeType.Absolute,500));bottom.Controls.Add(status,0,0);
-        var actions=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.RightToLeft,WrapContents=false};actions.Controls.AddRange([close,folder,open,cancel,convert]);bottom.Controls.Add(actions,1,0);layout.Controls.Add(bottom,0,9);Controls.Add(layout);
+        status.AutoSize=true;status.MinimumSize=new Size(0,32);status.Margin=Padding.Empty;layout.Controls.Add(status,0,9);
+        var actions=new FlowLayoutPanel{Dock=DockStyle.Fill,AutoSize=true,AutoSizeMode=AutoSizeMode.GrowAndShrink,FlowDirection=FlowDirection.RightToLeft,WrapContents=false,Margin=Padding.Empty,Padding=new Padding(0,4,0,4)};
+        actions.Controls.AddRange([close,folder,open,cancel,convert]);layout.Controls.Add(actions,0,10);Controls.Add(layout);
         output.Text=Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     }
     private async Task AddFiles(IEnumerable<string> paths)
