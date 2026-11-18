@@ -13,7 +13,7 @@ public static class DocumentExtractor
 {
     private static readonly XNamespace S="http://schemas.openxmlformats.org/spreadsheetml/2006/main";
     public static readonly HashSet<string> Extensions = new(StringComparer.OrdinalIgnoreCase)
-    { ".xlsx",".xlsm",".xls",".xlsb",".xltx",".xltm",".xlt",".pdf",".hwpx",".hwp",".docx",".doc",".pptx",".ppt",".txt",".csv",".tsv",".md",".log",".rtf" };
+    { ".xlsx",".xlsm",".xls",".xlsb",".xltx",".xltm",".xlt",".pdf",".hwpx",".hwp",".hml",".docx",".doc",".pptx",".ppt",".txt",".csv",".tsv",".md",".log",".rtf",".eml",".html",".htm" };
 
     static DocumentExtractor()=>Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     private sealed class TextSink
@@ -30,6 +30,11 @@ public static class DocumentExtractor
         var ext=Path.GetExtension(path).ToLowerInvariant();var sink=new TextSink();string[] sheets=[];var note="";
         if(ext is ".doc" or ".ppt" or ".rtf")return new("",[],"파일명만","이 형식은 파일명으로 검색합니다. DOCX·PPTX·TXT로 변환하면 본문을 읽을 수 있습니다.");
         if(new FileInfo(path).Length>80*1024*1024)return new("",[],"용량 초과","80MB를 초과하여 파일명만 색인했습니다.");
+        if(ext is ".hwp" or ".hwpx" or ".hml" or ".docx" && KordocParser.Available)
+        {
+            try{return KordocParser.Parse(path);}
+            catch(Exception ex){note="kordoc 대체 파싱: "+ex.Message+" · ";if(ext==".hml")return new("",[],"읽기 실패",note);}
+        }
         if(ext is ".xlsx" or ".xlsm" or ".xltx" or ".xltm")sheets=ReadExcelXml(path,sink);
         else if(ext is ".xls" or ".xlsb" or ".xlt")
         {
@@ -60,8 +65,13 @@ public static class DocumentExtractor
         }
         else if(ext==".hwp")ReadHwp(path,sink);
         else if(ext is ".hwpx" or ".docx" or ".pptx")ReadOfficeXml(path,ext,sink);
+        else if(ext is ".eml" or ".html" or ".htm")
+        {
+            var raw=new TextSink();ReadText(path,raw);
+            sink.Add(ext==".eml"?MailDocumentParser.Parse(raw.Value.ToString()):ResearchText.Plain(raw.Value.ToString()));
+        }
         else ReadText(path,sink);
-        if(sink.Full)note="본문이 길어 앞부분 "+TextRules.MaxTextLength.ToString("N0")+"자까지 색인했습니다.";
+        if(sink.Full)note+="본문이 길어 앞부분 "+TextRules.MaxTextLength.ToString("N0")+"자까지 색인했습니다.";
         return new(sink.Value.ToString(),sheets,sink.Full?"일부 내용":"완료",note);
     }
 

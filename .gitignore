@@ -15,3 +15,5 @@ index-result.json
 seed-*.json
 seed-*.txt
 updates/
+**/node_modules/
+research-connections.json

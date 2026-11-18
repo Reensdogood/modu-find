@@ -1,0 +1,55 @@
+{
+  "reviewedOn": "2026-11-18",
+  "kordocRuntime": "npm kordoc@4.24.83 (main 4.25.0 not yet published at verification)",
+  "repositories": [
+    {
+      "repository": "chrisryugj/kordoc",
+      "reviewedCommit": "6fa11788977058ebb523f35792bd6b71489d3c92",
+      "reviewedVersion": "4.25.0",
+      "license": "MIT",
+      "usage": "Runtime npm dependency"
+    },
+    {
+      "repository": "chrisryugj/Docufinder",
+      "reviewedCommit": "80ea25d554e035895e7bf8ba3f832f621bf06e7f",
+      "reviewedVersion": "3.8.17",
+      "license": "BUSL-1.1",
+      "usage": "Feature inspiration; no source code copied or bundled"
+    },
+    {
+      "repository": "chrisryugj/korean-dart-mcp",
+      "reviewedCommit": "be4619eb8e74479df81f82f11aa42ced05869937",
+      "reviewedVersion": "0.10.3",
+      "license": "MIT",
+      "usage": "OpenDART API behavior reference"
+    },
+    {
+      "repository": "chrisryugj/korean-stats-mcp",
+      "reviewedCommit": "8f9fadbf5928bd293ce21cc2d35c8990f5e7c4ac",
+      "reviewedVersion": "1.8.9",
+      "license": "MIT",
+      "usage": "Read-only remote API connector schema reference"
+    },
+    {
+      "repository": "chrisryugj/schoolinfo-mcp",
+      "reviewedCommit": "b780e5dbf9de1dace64e61832047bb68b2021ee3",
+      "reviewedVersion": "0.3.0",
+      "license": "MIT",
+      "usage": "Read-only remote API connector schema reference"
+    },
+    {
+      "repository": "chrisryugj/lexdiff",
+      "reviewedCommit": "2bcf525852c109b672d1a37eaea9c649a84c33ef",
+      "reviewedVersion": "2.6.0-beta",
+      "license": "BSL-1.1",
+      "usage": "Feature inspiration; no source code copied or bundled"
+    },
+    {
+      "repository": "chrisryugj/korean-law-mcp",
+      "reviewedCommit": "733eb60d38119c1408b6118d4e0825ee445d42e0",
+      "reviewedVersion": "4.15.24",
+      "license": "MIT",
+      "usage": "Read-only remote API connector schema reference"
+    }
+  ]
+}

@@ -3,12 +3,13 @@
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><AssemblyName>ModuFind</AssemblyName>
     <RootNamespace>DocumentFinder.App</RootNamespace><Product>모두찾아줘</Product>
-    <Company>김린</Company><Description>로컬 문서 검색과 문서 형식 변환</Description>
+    <Company>beondiueyow</Company><Description>문서 검색·변환과 공공자료 원문 근거 답변</Description>
     <PublishSingleFile>true</PublishSingleFile><SelfContained>true</SelfContained><RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract><EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>../assets/modufind.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../DocumentFinder.Core/DocumentFinder.Core.csproj" /></ItemGroup>
+  <ItemGroup><PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" /></ItemGroup>
   <ItemGroup><EmbeddedResource Include="../assets/modufind.ico" LogicalName="ModuFind.Icon" /></ItemGroup>
 </Project>

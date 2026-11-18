@@ -2,7 +2,7 @@ using Microsoft.Data.Sqlite;
 
 namespace DocumentFinder.Core;
 
-public sealed class SearchStore
+public sealed partial class SearchStore
 {
     public string DatabasePath { get; }
     private readonly string connectionString;
@@ -27,6 +27,8 @@ public sealed class SearchStore
             CREATE INDEX IF NOT EXISTS ix_documents_kind ON documents(kind);
             CREATE INDEX IF NOT EXISTS ix_documents_modified ON documents(modified);
             CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY, value TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS document_chunks(path TEXT NOT NULL COLLATE NOCASE, ordinal INTEGER NOT NULL, page INTEGER, anchor TEXT NOT NULL, text TEXT NOT NULL, PRIMARY KEY(path,ordinal));
+            CREATE TABLE IF NOT EXISTS document_notes(path TEXT PRIMARY KEY COLLATE NOCASE, bookmark INTEGER NOT NULL DEFAULT 0, tags TEXT NOT NULL DEFAULT '');
             CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING fts5(search_text, content='documents', content_rowid='id', tokenize='trigram');
             CREATE TRIGGER IF NOT EXISTS docs_ai AFTER INSERT ON documents BEGIN
               INSERT INTO documents_fts(rowid,search_text) VALUES(new.id,new.search_text); END;
@@ -49,10 +51,10 @@ public sealed class SearchStore
     public bool NeedsUpdate(FileRecord file)
     {
         using var c = Open(); using var cmd = c.CreateCommand();
-        cmd.CommandText = "SELECT size,modified,status FROM documents WHERE path=$p"; cmd.Parameters.AddWithValue("$p", file.Path);
+        cmd.CommandText = "SELECT size,modified,status,EXISTS(SELECT 1 FROM document_chunks WHERE path=$p) FROM documents WHERE path=$p"; cmd.Parameters.AddWithValue("$p", file.Path);
         using var r = cmd.ExecuteReader();
         return !r.Read() || r.GetInt64(0) != file.Size || r.GetInt64(1) != file.ModifiedTicks
-            || r.GetString(2) is "파일명만" or "온라인 전용" or "읽기 실패" or "시간 초과";
+            || r.GetString(2) is "파일명만" or "온라인 전용" or "읽기 실패" or "시간 초과" || r.GetInt32(3)==0;
     }
 
     public void RegisterFiles(IEnumerable<FileRecord> files)
@@ -80,7 +82,7 @@ public sealed class SearchStore
     public void Update(FileRecord f, ExtractedDocument d)
     {
         RegisterFiles([f]);
-        using var c = Open(); using var cmd = c.CreateCommand();
+        using var c = Open();using var transaction=c.BeginTransaction();using var cmd = c.CreateCommand();cmd.Transaction=transaction;
         var sheets = string.Join("\n", d.Sheets);
         cmd.CommandText = """
           UPDATE documents SET size=$s, modified=$m, sheets=$sh, body=$b, status=$st, note=$note,
@@ -92,6 +94,7 @@ public sealed class SearchStore
         cmd.Parameters.AddWithValue("$sn", TextRules.Normalize(sheets));
         cmd.Parameters.AddWithValue("$text", TextRules.Normalize(f.Path + "\n" + sheets + "\n" + d.Content));
         cmd.Parameters.AddWithValue("$at", DateTime.UtcNow.Ticks); cmd.ExecuteNonQuery();
+        SaveChunks(c,transaction,f.Path,d);transaction.Commit();
     }
 
     public List<SearchHit> Search(SearchOptions options, out int total)
@@ -99,6 +102,8 @@ public sealed class SearchStore
         var terms = TextRules.Terms(options.Query);
         using var c = Open(); using var cmd = c.CreateCommand();
         var where = new List<string>(); var scores = new List<string>();
+        if(options.OnlyBookmarked)where.Add("EXISTS(SELECT 1 FROM document_notes n WHERE n.path=documents.path AND n.bookmark=1)");
+        if(options.Tag is not null){where.Add("EXISTS(SELECT 1 FROM document_notes n WHERE n.path=documents.path AND instr(lower(n.tags),lower($tag))>0)");cmd.Parameters.AddWithValue("$tag",options.Tag);}
         if (options.Kind != "전체") { where.Add("kind=$kind"); cmd.Parameters.AddWithValue("$kind", options.Kind); }
         var longTerms = terms.Where(t => t.EnumerateRunes().Count() >= 3).ToArray();
         if (longTerms.Length > 0 && !options.NamesOnly)

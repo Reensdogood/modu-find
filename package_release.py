@@ -54,6 +54,12 @@ if (out/'conversion/filee-2.4.1/filee-cli.exe').is_file():
               'Source: https://github.com/KnifeLemon/Filee/tree/90dd8c322e62aa07e315dd17949ddd5283c04c08',
               'Filee and every bundled/optional component retain their own licenses.',
               'See conversion/filee-2.4.1/FILEE-LICENSE.txt and FILEE-THIRD-PARTY-NOTICES.md, and licenses alongside engines.']
+if (out/'parsing/kordoc/node.exe').is_file():
+    notes += ['', 'kordoc 4.24.83: Copyright (c) chrisryugj, MIT License.',
+              'Source: https://github.com/chrisryugj/kordoc and the pinned npm package/package-lock.json.',
+              'Node.js 24 LTS and dependencies retain their original licenses. See parsing/kordoc/NODE-LICENSE.txt, node_modules/kordoc/LICENSE and THIRD-PARTY-PACKAGES.json.',
+              'Public-data connector references: chrisryugj/korean-law-mcp, korean-stats-mcp, schoolinfo-mcp, korean-dart-mcp (MIT).',
+              'Docufinder and lexdiff are feature references only; no BSL-licensed application code is bundled.']
 for framework in assets['project']['frameworks'].values():
     for dep in framework.get('downloadDependencies',[]):
         if dep['name'].lower() not in {'microsoft.netcore.app.runtime.win-x64','microsoft.windowsdesktop.app.runtime.win-x64'}:continue

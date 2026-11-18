@@ -24,6 +24,10 @@ if($LASTEXITCODE -ne 0){throw 'Core/update tests failed.'}
 if($LASTEXITCODE -ne 0){throw 'Application publish failed.'}
 & python (Join-Path $root 'tools\prepare_filee.py') --publish-dir $publish
 if($LASTEXITCODE -ne 0){throw 'Filee runtime preparation failed.'}
+& python (Join-Path $root 'tools\prepare_kordoc.py') --publish-dir $publish
+if($LASTEXITCODE -ne 0){throw 'kordoc runtime preparation failed.'}
+& dotnet run --project (Join-Path $root 'DocumentFinder.Research.Tests') -c Release -- (Join-Path $publish 'parsing\kordoc')
+if($LASTEXITCODE -ne 0){throw 'Research/parser integration checks failed.'}
 & dotnet run --project (Join-Path $root 'DocumentFinder.Conversion.Tests') -c Release -- (Join-Path $publish 'conversion\filee-2.4.1')
 if($LASTEXITCODE -ne 0){throw 'Document conversion integration checks failed.'}
 & python (Join-Path $root 'verify_runtime.py') (Join-Path $publish 'ModuFind.exe')
@@ -32,7 +36,7 @@ if($LASTEXITCODE -ne 0){throw 'Worker integration checks failed.'}
 if($LASTEXITCODE -ne 0){throw 'Index integration checks failed.'}
 & python (Join-Path $root 'package_release.py') --publish-dir $publish --release-dir $release --version $Version --no-zip
 if($LASTEXITCODE -ne 0){throw 'License/package preparation failed.'}
-& $InnoCompiler "/DAppVersion=$Version" "/DPublishDir=$publish" "/DReleaseDir=$release" (Join-Path $root 'installer\modufind.iss')
+& $InnoCompiler '/Q' "/DAppVersion=$Version" "/DPublishDir=$publish" "/DReleaseDir=$release" (Join-Path $root 'installer\modufind.iss')
 if($LASTEXITCODE -ne 0){throw 'Installer build failed.'}
 $archive=Join-Path $release "ModuFind-$Version-win-x64-portable.zip"
 Compress-Archive -Path (Join-Path $publish '*') -DestinationPath $archive -Force

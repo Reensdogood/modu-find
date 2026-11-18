@@ -4,13 +4,14 @@ using System.Text.RegularExpressions;
 namespace DocumentFinder.Core;
 
 public record FileRecord(string Path, long Size, long ModifiedTicks, string Root);
-public record ExtractedDocument(string Content, string[] Sheets, string Status = "완료", string Note = "");
+public record DocumentSection(int? Page,string Anchor,string Text);
+public record ExtractedDocument(string Content, string[] Sheets, string Status = "완료", string Note = "", IReadOnlyList<DocumentSection>? Sections=null);
 public record SearchHit(long Id, string Name, string Path, string Extension, long Size, long ModifiedTicks,
     string Sheets, string Content, string Status, string Note, int Rank);
 public record IndexStats(int Total, int Complete, int Pending, int Issues, long DatabaseBytes);
 public record ScanProgress(string Phase, int Found, int Processed, int Updated, int Skipped, int Issues, string Current, bool Finished = false);
 public record ScanOptions(bool IncludeOnlineFiles = true, long MaximumFileBytes = 80 * 1024 * 1024);
-public record SearchOptions(string Query, string Kind = "전체", bool NamesOnly = false, bool NewestFirst = false, int Limit = 500);
+public record SearchOptions(string Query, string Kind = "전체", bool NamesOnly = false, bool NewestFirst = false, int Limit = 500,bool OnlyBookmarked=false,string? Tag=null);
 
 public static class TextRules
 {

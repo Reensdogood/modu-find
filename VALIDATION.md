@@ -1,5 +1,25 @@
 # 모두찾아줘 검증
 
+## 1.3.0 · 구조 파싱과 자연어 근거 검색
+
+검증일: 2026-11-18. 별도 임시 데이터·합성 문서로 검사하며 실제 사용자 색인을 테스트 입력으로 쓰지 않음.
+
+- 기존 검색·업데이트 45개, 변환 40개, 작업 프로세스 4개, 통합 색인 7개를 포함한 로컬 전체 빌드 통과.
+- 연구·파싱 검사: 쪽·문단 근거 저장, 자연어 문서 검색, 북마크·태그 SQL 필터, 기존 DB 보존, 재파싱 조건, 반복 줄 비교, MIME 한글, 실제 kordoc DOCX 표 파싱, 원본 바이트 불변, SSE 응답, 한도 오류·키 비노출, 공식 호스트·XML 외부 엔티티 제한 등을 검증.
+- 공개 서비스 추가 검사: 법령 제15조 위치와 교차 참조 구분, 학교 학생수, KOSIS 통계, 지원사업과 대전 지역 공고, OpenDART 무키 상태의 설정 안내, 설치된 Ollama 모델의 원문 선택형 요약 확인.
+- 원격 법령 공용 HTTP 429를 실제 확인하고 국가법령정보센터 `lsiSeq`·`efYd` 본문 대체 조회를 검증. 이후 공용 MCP 정상 응답도 확인.
+- 학교 공시는 요청 공시연도·학교코드를 표시하며 개별 공시 직접 링크가 없는 경우 학교별 공시 검색 화면으로 연결한다는 한계를 노출.
+- OpenDART 개인 키와 기업마당 개인 키를 사용하는 실제 API 응답 검사는 키가 없어 실행하지 않음. 무키 오류·공개 목록·공고 피드는 확인.
+- GUI에서 질문 입력 → 내 PC 원문 근거 → 연결 설정의 설치된 Ollama 감지 → 로컬 AI 요약 완료를 확인. 기본 답변은 AI 없이 동작.
+- 별도 업무 폴더에서 파일 생성과 수정이 수동 색인 없이 실제 DB 본문에 반영됨을 확인. 원본 삭제 기능 없음.
+- 기존 `document-structure-parser` 스킬을 kordoc 백엔드로 확장하고 HWP·HWPX·DOCX 3개 파일을 실제 파싱. 스킬 frontmatter 검사 통과.
+- 새 Windows 릴리스 CI에서도 기존 기능·연구 파싱 검사와 설치·재설치·제거 수명주기 검사를 실행한다.
+
+```powershell
+dotnet run --project DocumentFinder.Research.Tests -c Release -- artifacts/app/parsing/kordoc
+dotnet run --project DocumentFinder.Research.Tests -c Release -- artifacts/app/parsing/kordoc --live --local-ai
+```
+
 ## 1.2.1 · 버튼과 체크박스 표시
 
 검증일: 2026-11-16. 사용자 스크린샷의 세 영역을 대상으로 native Windows 화면에서 확인.

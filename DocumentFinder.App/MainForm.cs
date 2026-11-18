@@ -26,6 +26,10 @@ internal sealed class MainForm : Form
     private readonly CheckBox wholeText=new(){Text="본문 전체 보기",AutoSize=true};
     private readonly Button update=Button("업데이트 확인");
     private readonly Button documentConvert=Button("문서 변환");
+    private readonly Button research=Button("근거 검색");
+    private readonly CheckBox bookmarks=new(){Text="북마크",AutoSize=true},watchChanges=new(){Text="변경 자동 반영",AutoSize=true};
+    private FolderWatchService? watcher;
+    private SearchHit? comparison;
     private AppRelease? availableRelease;
     private readonly System.Windows.Forms.Timer debounce=new(){Interval=280};
     private readonly System.Windows.Forms.Timer duringScan=new(){Interval=2500};
@@ -46,6 +50,10 @@ internal sealed class MainForm : Form
         this.store=store;Text="모두찾아줘";Icon=AppBrand.LoadIcon();Size=new Size(1380,880);MinimumSize=new Size(1060,680);StartPosition=FormStartPosition.CenterScreen;
         Font=new Font("맑은 고딕",10F);ForeColor=ink;BackColor=Color.White;AutoScaleMode=AutoScaleMode.Dpi;
         Build();LoadSettings();WireEvents();
+        watcher=new(store,()=>scanTask is {IsCompleted:false},message=>{if(!IsDisposed)progressText.Text=message;});
+        watchChanges.Checked=store.GetSetting("watchChanges")=="true";
+        watchChanges.CheckedChanged+=(_,_)=>{store.SetSetting("watchChanges",watchChanges.Checked?"true":"false");watcher.Configure(roots.Items.Cast<string>(),watchChanges.Checked);};
+        watcher.Configure(roots.Items.Cast<string>(),watchChanges.Checked);
         if(SystemInformation.HighContrast)UseSystemColors(this);
         Shown+=async(_,_)=>{resultSplit.SplitterDistance=Math.Max(350,resultSplit.Width-365);await Search();query.Focus();_ = CheckUpdatesInBackground();};
     }
@@ -72,14 +80,15 @@ internal sealed class MainForm : Form
     {
         var shell=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=3,Padding=Padding.Empty};
         shell.RowStyles.Add(new RowStyle(SizeType.Absolute,88));shell.RowStyles.Add(new RowStyle(SizeType.Percent,100));shell.RowStyles.Add(new RowStyle(SizeType.Absolute,160));Controls.Add(shell);
-        var header=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=5,RowCount=1,Margin=Padding.Empty,Padding=new Padding(22,12,20,12),BackColor=Color.FromArgb(246,248,251)};
+        var header=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=6,RowCount=1,Margin=Padding.Empty,Padding=new Padding(22,12,20,12),BackColor=Color.FromArgb(246,248,251)};
         header.RowStyles.Add(new RowStyle(SizeType.Percent,100));
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,48));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,245));header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,125));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,142));
+        header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,48));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,245));header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,125));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,125));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,142));
         header.Controls.Add(new PictureBox{Image=Icon!.ToBitmap(),SizeMode=PictureBoxSizeMode.Zoom,Dock=DockStyle.Fill,Margin=new Padding(0,4,10,4),AccessibleName="모두찾아줘 아이콘"},0,0);
         var name=Label("모두찾아줘");name.Font=new Font(Font.FontFamily,18,FontStyle.Bold);header.Controls.Add(name,1,0);
-        var desc=Label("파일명 · 엑셀 시트명 · 문서 본문 검색");desc.ForeColor=muted;header.Controls.Add(desc,2,0);
-        documentConvert.Dock=DockStyle.Fill;documentConvert.Margin=new Padding(0,4,8,4);documentConvert.Click+=(_,_)=>OpenConversion();header.Controls.Add(documentConvert,3,0);
-        update.Dock=DockStyle.Fill;update.Margin=new Padding(0,4,0,4);update.Click+=async(_,_)=>await OpenUpdates();header.Controls.Add(update,4,0);shell.Controls.Add(header,0,0);
+        var desc=Label("파일명 · 엑셀 시트명 · 문서 본문 검색");desc.ForeColor=muted;desc.AutoEllipsis=true;header.Controls.Add(desc,2,0);
+        research.Dock=DockStyle.Fill;research.Margin=new Padding(0,4,8,4);research.Click+=(_,_)=>{using var dialog=new ResearchForm(store,query.Text);dialog.ShowDialog(this);};header.Controls.Add(research,3,0);
+        documentConvert.Dock=DockStyle.Fill;documentConvert.Margin=new Padding(0,4,8,4);documentConvert.Click+=(_,_)=>OpenConversion();header.Controls.Add(documentConvert,4,0);
+        update.Dock=DockStyle.Fill;update.Margin=new Padding(0,4,0,4);update.Click+=async(_,_)=>await OpenUpdates();header.Controls.Add(update,5,0);shell.Controls.Add(header,0,0);
 
         var work=new SplitContainer{Size=new Size(1300,600),Dock=DockStyle.Fill,FixedPanel=FixedPanel.Panel1,SplitterWidth=1,SplitterDistance=248};
         work.Panel1MinSize=220;work.Panel2MinSize=600;work.Panel1.BackColor=Color.FromArgb(246,248,251);shell.Controls.Add(work,0,1);
@@ -105,7 +114,7 @@ internal sealed class MainForm : Form
         searchLine.Controls.Add(query,0,0);searchLine.Controls.Add(searchButton,1,0);body.Controls.Add(searchLine,0,0);
         kind.Items.AddRange(["전체","엑셀","PDF","한글","Word","PowerPoint","텍스트"]);kind.SelectedIndex=0;
         order.Items.AddRange(["관련도순","최근 수정순"]);order.SelectedIndex=0;
-        var filters=Flow();filters.Padding=new Padding(0,5,0,0);kind.Margin=new Padding(0,0,8,0);order.Margin=new Padding(0,0,12,0);namesOnly.Margin=new Padding(0,4,0,0);filters.Controls.AddRange([kind,order,namesOnly]);body.Controls.Add(filters,0,1);
+        var filters=Flow();filters.Padding=new Padding(0,5,0,0);kind.Margin=new Padding(0,0,8,0);order.Margin=new Padding(0,0,12,0);namesOnly.Margin=new Padding(0,4,8,0);bookmarks.Margin=new Padding(0,4,8,0);watchChanges.Margin=new Padding(0,4,0,0);filters.Controls.AddRange([kind,order,namesOnly,bookmarks,watchChanges]);body.Controls.Add(filters,0,1);
         var summary=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2};summary.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));summary.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,110));
         count.ForeColor=muted;summary.Controls.Add(count,0,0);var export=new LinkLabel{Text="결과 목록 저장",Dock=DockStyle.Fill,LinkColor=accent,TextAlign=ContentAlignment.MiddleRight};export.LinkClicked+=(_,_)=>ExportResults();summary.Controls.Add(export,1,0);body.Controls.Add(summary,0,2);
         resultSplit.Panel1MinSize=250;resultSplit.Panel2MinSize=250;
@@ -135,6 +144,12 @@ internal sealed class MainForm : Form
         grid.SelectionChanged+=(_,_)=>SelectCurrent();grid.CellDoubleClick+=(_,e)=>{if(e.RowIndex>=0)OpenSelected(false);};
         grid.KeyDown+=(_,e)=>{if(e.KeyCode==Keys.Enter){e.SuppressKeyPress=true;OpenSelected(false);}};
         var context=new ContextMenuStrip();context.Items.Add("파일 열기",null,(_,_)=>OpenSelected(false));context.Items.Add("폴더 열기",null,(_,_)=>OpenSelected(true));context.Items.Add("문서 변환",null,(_,_)=>OpenConversion());context.Items.Add("경로 복사",null,(_,_)=>CopyPath());grid.ContextMenuStrip=context;
+        context.Items.Add(new ToolStripSeparator());
+        context.Items.Add("본문 Markdown 저장",null,(_,_)=>{if(selected is not null)try{DocumentTools.Export(this,selected);}catch(Exception ex){MessageBox.Show(this,ex.Message);}});
+        context.Items.Add("북마크 설정·해제",null,async(_,_)=>{if(selected is null)return;var note=store.GetNote(selected.Path);store.SetNote(selected.Path,!note.Bookmark,note.Tags);await Search();});
+        context.Items.Add("태그 편집",null,(_,_)=>{if(selected is null)return;var note=store.GetNote(selected.Path);var tags=DocumentTools.EditTags(this,note.Tags);if(tags is not null)store.SetNote(selected.Path,note.Bookmark,tags);});
+        context.Items.Add("비교 대상으로 선택",null,(_,_)=>{comparison=selected;progressText.Text=selected is null?"문서를 먼저 선택하세요.":"비교 대상: "+selected.Name;});
+        context.Items.Add("선택 문서와 비교",null,(_,_)=>{if(selected is null||comparison is null){MessageBox.Show(this,"먼저 ‘비교 대상으로 선택’으로 이전 문서를 지정하세요.");return;}try{DocumentTools.ShowText(this,"문서 비교",DocumentComparison.Compare(comparison.Content,selected.Content,comparison.Name,selected.Name));}catch(Exception ex){MessageBox.Show(this,ex.Message);}});
     }
     private void BuildDetails()
     {
@@ -158,6 +173,7 @@ internal sealed class MainForm : Form
         debounce.Tick+=async(_,_)=>{debounce.Stop();await Search();};query.TextChanged+=(_,_)=>ScheduleSearch();
         query.KeyDown+=async(_,e)=>{if(e.KeyCode==Keys.Enter){e.SuppressKeyPress=true;debounce.Stop();await Search();}};
         kind.SelectedIndexChanged+=(_,_)=>ScheduleSearch();order.SelectedIndexChanged+=(_,_)=>ScheduleSearch();namesOnly.CheckedChanged+=(_,_)=>ScheduleSearch();
+        bookmarks.CheckedChanged+=(_,_)=>ScheduleSearch();
         start.Click+=async(_,_)=>await StartScan();stop.Click+=(_,_)=>{scanCts?.Cancel();stop.Enabled=false;progressText.Text="현재 작업을 중지하고 있습니다…";};
         open.Click+=(_,_)=>OpenSelected(false);folder.Click+=(_,_)=>OpenSelected(true);copy.Click+=(_,_)=>CopyPath();
         duringScan.Tick+=async(_,_)=>await Search();
@@ -168,7 +184,7 @@ internal sealed class MainForm : Form
                 e.Cancel=true;closing=true;scanCts?.Cancel();try{await scanTask;}catch{};Close();
             }
         };
-        FormClosed+=(_,_)=>{debounce.Dispose();duringScan.Dispose();tips.Dispose();scanCts?.Dispose();};
+        FormClosed+=(_,_)=>{watcher?.Dispose();debounce.Dispose();duringScan.Dispose();tips.Dispose();scanCts?.Dispose();};
     }
     protected override bool ProcessCmdKey(ref Message msg,Keys keyData)
     {
@@ -188,7 +204,7 @@ internal sealed class MainForm : Form
         online.Checked=store.GetSetting("online")!="false";UpdateStats();
     }
     private void SetRoots(IEnumerable<string> paths){roots.Items.Clear();foreach(var p in TextRules.ReduceRoots(paths))roots.Items.Add(p);}
-    private void SaveRoots()=>store.SetSetting("roots",JsonSerializer.Serialize(roots.Items.Cast<string>().ToArray()));
+    private void SaveRoots(){store.SetSetting("roots",JsonSerializer.Serialize(roots.Items.Cast<string>().ToArray()));watcher?.Configure(roots.Items.Cast<string>(),watchChanges.Checked);}
     private void AddFolder()
     {
         using var dialog=new FolderBrowserDialog{Description="검색할 문서가 있는 폴더를 선택하세요.",UseDescriptionForTitle=true,ShowNewFolderButton=false};
@@ -197,7 +213,7 @@ internal sealed class MainForm : Form
     private void ScheduleSearch(){debounce.Stop();debounce.Start();}
     private async Task Search()
     {
-        if(IsDisposed)return;var version=++searchVersion;var options=new SearchOptions(query.Text,kind.SelectedItem?.ToString()??"전체",namesOnly.Checked,order.SelectedIndex==1);
+        if(IsDisposed)return;var version=++searchVersion;var onlyBookmarks=bookmarks.Checked;var tag=query.Text.StartsWith('#')?query.Text[1..].Trim():null;var options=new SearchOptions(tag is null?query.Text:"",kind.SelectedItem?.ToString()??"전체",namesOnly.Checked,order.SelectedIndex==1,OnlyBookmarked:onlyBookmarks,Tag:tag);
         try
         {
             var result=await Task.Run(()=>{var list=store.Search(options,out var total);return(list,total);});

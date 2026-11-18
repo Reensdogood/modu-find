@@ -1,0 +1,10 @@
+{
+  "name": "modufind-document-parser",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline document parsing sidecar for ModuFind",
+  "author": "beondiueyow",
+  "license": "MIT",
+  "dependencies": { "kordoc": "4.24.83" }
+}

@@ -43,6 +43,10 @@ internal static class Program
         {
             RunConversion(args);return;
         }
+        if(args.Contains("--ask"))
+        {
+            RunResearch(args);return;
+        }
         ApplicationConfiguration.Initialize();
         Application.ThreadException+=(_,e)=>MessageBox.Show("작업 중 오류가 발생했습니다. 다시 시도해 주세요.\n\n"+e.Exception.Message,"모두찾아줘",MessageBoxButtons.OK,MessageBoxIcon.Warning);
         try
@@ -56,6 +60,23 @@ internal static class Program
             Application.Run(main);
         }
         catch(Exception ex){MessageBox.Show("모두찾아줘를 시작하지 못했습니다.\n\n"+ex.Message,"모두찾아줘",MessageBoxButtons.OK,MessageBoxIcon.Error);}
+    }
+
+    private static void RunResearch(string[] args)
+    {
+        string? Arg(string key){var n=Array.IndexOf(args,key);return n>=0&&n+1<args.Length?args[n+1]:null;}
+        Directory.CreateDirectory(DataDirectory);var report=Arg("--report")??Path.Combine(DataDirectory,"research-result.json");
+        try
+        {
+            using var cancellation=new CancellationTokenSource();if(int.TryParse(Arg("--cancel-after-ms"),out var ms))cancellation.CancelAfter(ms);
+            var store=new SearchStore(Path.Combine(DataDirectory,"documents.db"));using var service=new ResearchService(store,ResearchSettings.Load());
+            var domain=Enum.TryParse<ResearchDomain>(Arg("--domain"),true,out var selected)?selected:ResearchDomain.Local;
+            var result=service.AskAsync(Arg("--ask")??"",domain,cancellation.Token).GetAwaiter().GetResult();
+            if(Arg("--local-ai") is {Length:>0} model){using var ai=new LocalResearchAi();result=result with{Answer=ai.SummarizeAsync(result,model,cancellation.Token).GetAwaiter().GetResult()};}
+            File.WriteAllText(report,JsonSerializer.Serialize(result,new JsonSerializerOptions{WriteIndented=true}));
+        }
+        catch(OperationCanceledException){File.WriteAllText(report,JsonSerializer.Serialize(new{Cancelled=true}));}
+        catch(Exception ex){File.WriteAllText(report,JsonSerializer.Serialize(new{Error=ex.Message}));Environment.ExitCode=1;}
     }
 
     private static void RunConversion(string[] args)

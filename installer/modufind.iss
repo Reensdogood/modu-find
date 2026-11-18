@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "1.2.1"
+  #define AppVersion "1.3.0"
 #endif
 #ifndef PublishDir
   #define PublishDir "..\artifacts\app"
@@ -13,7 +13,7 @@ AppId={{49C94EA7-7F80-4BAC-BB30-2E23BA2D5F4A}
 AppName=모두찾아줘
 AppVersion={#AppVersion}
 AppVerName=모두찾아줘 {#AppVersion}
-AppPublisher=펀네트
+AppPublisher=beondiueyow
 AppPublisherURL=https://github.com/Reensdogood/modu-find
 AppSupportURL=https://github.com/Reensdogood/modu-find/issues
 AppUpdatesURL=https://github.com/Reensdogood/modu-find/releases/latest
